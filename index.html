@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prayer Tracker Pro+</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f5f5f5;
+}
+
+/* NAV */
+.nav{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  display:flex;
+  background:#fff;
+  border-top:1px solid #ddd;
+}
+
+.nav button{
+  flex:1;
+  padding:12px;
+  border:none;
+  background:#fff;
+  font-size:12px;
+}
+
+/* PAGE */
+.page{display:none;padding-bottom:60px;}
+.active{display:block;}
+
+/* HEADER */
+.header{
+  padding:15px;
+  background:#fff;
+  font-weight:bold;
+}
+
+/* CARD */
+.card{
+  margin:10px;
+  padding:15px;
+  background:#fff;
+  border-radius:12px;
+}
+
+/* PRAYER */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px;
+}
+
+.item{
+  padding:10px;
+  font-size:12px;
+  text-align:center;
+  border-radius:10px;
+  background:#ddd;
+}
+
+.done{background:#28a745;color:#fff}
+.missed{background:#dc3545;color:#fff}
+
+/* SCORE */
+.big{
+  font-size:30px;
+  text-align:center;
+}
+
+/* SETTINGS */
+input{
+  width:100%;
+  padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HOME -->
+<div id="home" class="page active">
+  <div class="header">Home</div>
+
+  <div class="card">
+    <div class="big" id="score">0%</div>
+    Score Today
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div class="item" onclick="done('fajr')">Fajr</div>
+      <div class="item" onclick="done('dhuhr')">Dhuhr</div>
+      <div class="item" onclick="done('asr')">Asr</div>
+      <div class="item" onclick="done('maghrib')">Maghrib</div>
+      <div class="item" onclick="done('isha')">Isha</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div id="stats" class="page">
+  <div class="header">Stats</div>
+
+  <div class="card">
+    <h3>Weekly Progress</h3>
+    <div id="weekly">Loading...</div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="history" class="page">
+  <div class="header">History</div>
+  <div class="card" id="log"></div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="page">
+  <div class="header">Settings</div>
+
+  <div class="card">
+    Name
+    <input id="name" oninput="saveName()">
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="show('home')">Home</button>
+  <button onclick="show('stats')">Stats</button>
+  <button onclick="show('history')">History</button>
+  <button onclick="show('settings')">Settings</button>
+</div>
+
+<script>
+let prayers=["fajr","dhuhr","asr","maghrib","isha"]
+
+let data = JSON.parse(localStorage.getItem("p")||"{}")
+let log = JSON.parse(localStorage.getItem("log")||"[]")
+
+if(!data.today){
+  data.today = {}
+  prayers.forEach(p=>data.today[p]="pending")
+}
+
+function done(p){
+  data.today[p]="done"
+  save()
+  update()
+}
+
+function update(){
+  let done=0
+
+  prayers.forEach(p=>{
+    if(data.today[p]=="done") done++
+  })
+
+  let score = Math.round((done/5)*100)
+  document.getElementById("score").innerText = score+"%"
+
+  document.getElementById("log").innerHTML =
+    log.slice(-10).map(x=>"<div>"+x+"</div>").join("")
+}
+
+function save(){
+  localStorage.setItem("p",JSON.stringify(data))
+
+  log.push(new Date().toLocaleDateString()+" - "+Object.values(data.today).filter(x=>x=="done").length+"/5")
+  localStorage.setItem("log",JSON.stringify(log))
+}
+
+function show(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
+  document.getElementById(id).classList.add("active")
+}
+
+function saveName(){
+  localStorage.setItem("name",document.getElementById("name").value)
+}
+
+document.getElementById("name").value = localStorage.getItem("name")||"User"
+
+update()
+</script>
+
+</body>
+</html>
